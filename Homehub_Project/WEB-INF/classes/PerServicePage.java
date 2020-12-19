@@ -36,7 +36,7 @@ public class PerServicePage extends HttpServlet
 		utility.printHtml("Header.html");
 		utility.printHtml("LeftNavigationBar.html");
 		
-		pw.print("<script src='https://maps.googleapis.com/maps/api/js?key=AIzaSyAitOkOxSX5dEnQD6qHt0S_710rFqGt2ks&callback=initMap&libraries=&v=weekly' defer></script>");
+		pw.print("<script src='https://maps.googleapis.com/maps/api/js?key=XXXX&callback=initMap&libraries=&v=weekly' defer></script>");
 		pw.print("<script>  function initMap() {var lat = parseFloat(document.getElementById('lat').innerHTML);");
 		pw.print("var lng = parseFloat(document.getElementById('lon').innerHTML);");
 		pw.print("  const points = {");
