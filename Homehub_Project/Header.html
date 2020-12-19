@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<title>HomeHub</title>
+		<meta name="keywords" content="" />
+		<meta name="description" content="" />
+		<link href="css/styles.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<!--MAP links to import-->
+		<script src="https://api.yelp.com/v3/businesses/matches"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAitOkOxSX5dEnQD6qHt0S_710rFqGt2ks&callback=initAutocomplete&libraries=places&v=weekly" defer></script>
+		<script>
+			$(document).ready(function(){ 
+				$('#myCarousel').carousel({ interval: 3000})
+
+				$('.dropdown-toggle').dropdown()
+
+				$('.carousel .item').each(function(){
+					var next = $(this).next();
+					if (!next.length) 
+					{
+						next = $(this).siblings(':first');
+					}
+					next.children(':first-child').clone().appendTo($(this));
+				});
+			});
+		</script>
+
+		<script type="text/javascript" src="javascript.js"></script>
+		<style>
+		* {
+			box-sizing : unset;
+		}
+
+		.col-md-6{
+			width : 45% ! important;
+		}
+
+		.pagination {
+			display: inline-block;
+		}
+
+		.pagination a {
+			color: black;
+			float: left;
+			padding: 8px 16px;
+			text-decoration: none;
+		}
+
+		.pagination a.active {
+			background-color: #4CAF50;
+			color: white;
+		}
+
+		.pagination a:hover:not(.active) {background-color: #ddd;}
+
+		</style>
+		<!-- //MAP CSS -->
+		<style>
+		#map {
+		  margin-top: 100px;
+		  height: 500px;
+		  width: 100%;
+		}
+
+		#description {
+		  font-family: Roboto;
+		  font-size: 15px;
+		  font-weight: 300;
+		}
+
+		#infowindow-content .title {
+		  font-weight: bold;
+		}
+
+		#infowindow-content {
+		  display: none;
+		}
+
+		#map #infowindow-content {
+		  display: inline;
+		}
+
+		.pac-card {
+		  margin: 10px 10px 0 0;
+		  border-radius: 2px 0 0 2px;
+		  box-sizing: border-box;
+		  -moz-box-sizing: border-box;
+		  outline: none;
+		  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+		  background-color: #800000;
+		  font-family: Roboto;
+		}
+
+		#pac-container {
+		  padding-bottom: 12px;
+		  margin-right: 12px;
+		}
+
+		.pac-controls {
+		  display: inline-block;
+		  padding: 5px 11px;
+		}
+
+		.pac-controls label {
+		  font-family: Roboto;
+		  font-size: 25px;
+		  font-weight: 300;
+		}
+
+		#pac-input {
+		  background-color: #fff;
+		  font-family: Roboto;
+		  font-size: 25px;
+		  font-weight: 300;
+		  margin-left: 12px;
+		  padding: 0 11px 0 13px;
+		  text-overflow: ellipsis;
+		  width: 400px;
+		  height: 70px;
+		}
+
+		#pac-input:focus {
+		  border-color: #4d90fe;
+		}
+
+		<!-- #title { -->
+		  <!-- color: #fff; -->
+		  <!-- background-color: #4d90fe; -->
+		  <!-- font-size: 25px; -->
+		  <!-- font-weight: 500; -->
+		  <!-- padding: 6px 12px; -->
+		<!-- } -->
+
+		<!-- #target { -->
+		  <!-- width: 345px; -->
+		<!-- } -->
+		}
+		</style>
+		<!-- MAP script -->
+		<script>
+			
+			function initAutocomplete() {	
+			 
+			  const map = new google.maps.Map(document.getElementById("map"), {
+				center: {
+				  lat: 41.840340,
+				  lng: -87.613701
+				},
+				zoom: 18,
+				mapTypeId: "roadmap",
+			  });
+			  
+			  // Create the search box and link it to the UI element.
+			  const input = document.getElementById("pac-input");
+			  const searchBox = new google.maps.places.SearchBox(input);
+			  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+			  // Bias the SearchBox results towards current map's viewport.
+			  map.addListener("bounds_changed", () => {
+				searchBox.setBounds(map.getBounds());
+			  });
+			  let markers = [];
+			  
+			  // Listen for the event fired when the user selects a prediction and retrieve
+			  // more details for that place.
+			  searchBox.addListener("places_changed", () => {
+				const places = searchBox.getPlaces();
+
+				if (places.length == 0) {
+				  return;
+				}
+				// Clear out the old markers.
+				markers.forEach((marker) => {
+				  marker.setMap(null);
+				  
+				});
+				markers = [];
+				
+				// For each place, get the icon, name and location.
+				const bounds = new google.maps.LatLngBounds();
+				
+				places.forEach((place) => {
+				  if (!place.geometry) {
+					console.log("Returned place contains no geometry");
+					return;
+				  }
+				  const icon = {
+					url: place.icon,
+					size: new google.maps.Size(71, 71),
+					origin: new google.maps.Point(0, 0),
+					anchor: new google.maps.Point(17, 34),
+					scaledSize: new google.maps.Size(25, 25),
+				  };
+				  // Create a marker for each place
+					markers.push(new google.maps.Marker({
+					  map,
+					  icon,
+					  title: place.name,
+					  position: place.geometry.location,
+					})
+				  );
+
+				  if (place.geometry.viewport) {
+					// Only geocodes have viewport.
+					bounds.union(place.geometry.viewport);
+				  } else {
+					bounds.extend(place.geometry.location);
+				  }
+				});
+				const infowindow = new google.maps.InfoWindow();
+			  markers.forEach((marker) =>{
+			  google.maps.event.addListener(marker, "click", function () {
+				infowindow.setContent(
+				  "<div><strong>" +
+				  marker.title +
+				  "</strong><br>" +
+				  "<a href='/Homehub_Project/PerServicePage?servicename="+encodeURIComponent(marker.title)+"'>View More</a>"+
+				  //encodeURIComponent(maker.title)+
+				  
+				  "</div>"
+				);
+				infowindow.open(map, this);
+			  });
+			  });
+				map.fitBounds(bounds);
+			  });
+			  
+			}
+
+        </script> 
+
+	</head>
+
+	<body onload="init()">
+
+		<nav style="background-color:#DCDCDC; height:125px;">
+			<ul>
+				<li><a style="align:left;" href="Home"><img src="/Homehub_Project/images/Logo_1.png" alt="logo" height="175px" width="155px" ></a></li>
+				
+				<!-- Cleaning -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Cleaning</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<li><a href = "ServicesList?servicetype='Home Cleaning'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Home Cleaning</a></li>
+						<li><a href = "ServicesList?servicetype='Solar Panel Cleaning'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Solar Panel Cleaning</a></li>
+						<li><a href = "ServicesList?servicetype='Air Duct Cleaning'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Air Duct Cleaning</a></li>
+						<li><a href = "ServicesList?servicetype='Carpet Cleaning'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Carpet Cleaning</a></li>
+						<li><a href = "ServicesList?servicetype='Pressure Washers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Pressure Washers</a></li>
+					</ul>
+				</li>
+				
+				<!-- Pool Services -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Pool Services</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<!-- <li><a href = "ServicesList?servicetype='Pool & Hot Tub Services'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Pool & Hot Tub Services</a></li> -->
+						<li><a href = "ServicesList?servicetype='Swimming Pools'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Swimming Pools</a></li>
+						<li><a href = "ServicesList?servicetype='Pool Cleaners'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Pool Cleaners</a></li>
+					</ul>
+				</li>
+				
+				<!-- Carpenting -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Carpenting</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<li><a href = "ServicesList?servicetype='Cabinetry'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Cabinetry</a></li>
+						<li><a href = "ServicesList?servicetype='Carpenters'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Carpenters</a></li>
+						<li><a href = "ServicesList?servicetype='Carpeting'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Carpeting</a></li>
+						<!-- <li><a href = "ServicesList?servicetype='Fences & Gates'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Fences & Gates</a></li> -->
+						<li><a href = "ServicesList?servicetype='Flooring'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Flooring</a></li>
+						<li><a href = "ServicesList?servicetype='Foundation Repair'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Foundation Repair</a></li>
+						<li><a href = "ServicesList?servicetype='Furniture Assembly'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Furniture Assembly</a></li>
+						<li><a href = "ServicesList?servicetype='Garbage Door Services'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Garbage Door Services</a></li>
+						<li><a href = "ServicesList?servicetype='Refinishing Services'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Refinishing Services</a></li>
+					</ul>
+				</li>
+				
+				<!-- Electrical -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Electrical</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<!-- <li><a href = "ServicesList?servicetype='Heating & Air Conditioning/HVAC'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Heating & Air Conditioning/HVAC</a></li> -->
+						<li><a href = "ServicesList?servicetype='Home Network Installation'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Home Network Installation</a></li>
+						<li><a href = "ServicesList?servicetype='Home Theatre Installation'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Home Theatre Installation</a></li>
+						<li><a href = "ServicesList?servicetype='Television Service Providers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Television Service Providers</a></li>
+						<li><a href = "ServicesList?servicetype='Internet Service Providers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Internet Service Providers</a></li>
+						<li><a href = "ServicesList?servicetype='Insulation Installation'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Insulation Installation</a></li>
+						<li><a href = "ServicesList?servicetype='Security Systems'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Security Systems</a></li>
+					</ul>
+				</li>
+				
+				<!-- Windows & Roof Services -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Windows & Roof Services</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<li><a href = "ServicesList?servicetype='Home Window Tinting'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Home Window Tinting</a></li>
+						<!-- <li><a href = "ServicesList?servicetype='Glass & Mirrors'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Glass & Mirrors</a></li> -->
+						<!-- <li><a href = "ServicesList?servicetype='Shades & Blinds'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Shades & Blinds</a></li> -->
+						<li><a href = "ServicesList?servicetype='Roof Inspectors'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Roof Inspectors</a></li>
+						<li><a href = "ServicesList?servicetype='Roofing'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Roofing</a></li>
+					</ul>
+				</li>
+		
+				<!-- Others -->
+				<li class="dropdown"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px"><a class="dropdown-toggle" type="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >Others</span></span></a>
+					<ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+						<li><a href = "ServicesList?servicetype='Electricity Suppliers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Electricity Suppliers</a></li>
+						<li><a href = "ServicesList?servicetype='Natural Gas Suppliers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Natural Gas Suppliers</a></li>
+						<li><a href = "ServicesList?servicetype='Water Suppliers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Water Suppliers</a></li>
+						<li><a href = "ServicesList?servicetype='Gardeners'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Gardeners</a></li>
+						<li><a href = "ServicesList?servicetype='Plumbing'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Plumbing</a></li>
+						<li><a href = "ServicesList?servicetype='Painters'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Painters</a></li>
+						<li><a href = "ServicesList?servicetype='Mobile Home Repair'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Mobile Home Repair</a></li>
+						<li><a href = "ServicesList?servicetype='Holiday Decorating Services'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Holiday Decorating Services</a></li>
+						<!-- <li><a href = "ServicesList?servicetype='Keys & Locksmiths'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Keys & Locksmiths</a></li> -->
+						<li><a href = "ServicesList?servicetype='Packing Services'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Packing Services</a></li>
+						<li><a href = "ServicesList?servicetype='Movers'"  style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Movers</a></li>
+					</ul>
+				</li>
+				
+				<!-- Handyman -->
+				<li><a href="ServicesList?servicetype='Handyman'" style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Handyman</a></li>
+				
+				<!-- Interior Design -->
+				<li><a href="ServicesList?servicetype='Interior Design'" style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Interior Design</a></li>
+				
+				<!-- Trending -->
+				<li><a href="Trending" style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px">Trending</a></li>
+				
+				<!-- Products -->
+				<!-- <li><a href="ServicesList?servicetype='Interior Design'" style = "color:#650D88; font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:14px">Products</a></li> -->
+			</ul>
+			
+			<div style="float: right;margin-top: 30px; border: 1px solid black; padding: 5px; padding-right: 15px;background-color:white;margin-right:20px;display:block">
+				<em style = "font-family: Comic Sans MS, cursive, sans-serif; font-weight:bold; font-size:15px; color:#E78200">Search Service:</em>
+          		<div name="autofillform">
+          			<input type="text" name="searchId" value="" class="input" id="searchId" onkeyup="doCompletion()" placeholder="search here.." style="padding: 5px; font-size: 16px;width:200px" />
+          			<div id="auto-row">
+          				<table id="complete-table" class="gridtable" style="position: absolute; width: 205px;display:none"></table>
+          			</div>
+          		<!-- </div> -->
+          	<!-- </div> -->
+
+		</nav>
+	  
+	</body>
+  
+</html>
+			
